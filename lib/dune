@@ -1,0 +1,3 @@
+(library
+ (name caml_8_lib)
+ (flags (:standard -w -66)))
