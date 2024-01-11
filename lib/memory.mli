@@ -1,11 +1,12 @@
+type c8_address = int
+type c8_memory
 
-type memory
+val init_mem : c8_memory
 
-val chip8_mem : memory
+val get_byte : c8_memory -> int -> int
+val set_byte : c8_memory -> int -> int -> c8_memory
+val fetch_opcode: c8_memory -> c8_address -> int
 
-val get_byte : memory -> int -> int
-val set_byte : memory -> int -> int -> memory
-val fetch_instruction: memory -> int -> int
 
 
 

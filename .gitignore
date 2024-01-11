@@ -30,3 +30,6 @@ _opam/
 
 # vscode folder
 .vscode/
+
+# misc local files
+smieci/

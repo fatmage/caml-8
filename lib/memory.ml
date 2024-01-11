@@ -1,7 +1,10 @@
-type memory = MemNode of memory * memory
-            | MemLeaf of int ;; (* uint8t? byte? char? *)
+type c8_address = int
 
-let chip8_mem =
+type c8_memory = 
+ | MemNode of c8_memory * c8_memory
+ | MemLeaf of int ;; (* uint8t? byte? char? *)
+
+let init_mem =
   let rec mem_help n =
     match n with
       | 0 -> MemLeaf (0)
@@ -29,7 +32,7 @@ let set_byte mem index v =
   in
     helper mem index 2048 v ;;
 
-let fetch_instruction mem pc =
+let fetch_opcode mem pc =
   let rec fetch_bytes mem pc key =
     if pc mod 2 == 0 then
       match mem with

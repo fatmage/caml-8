@@ -1,46 +1,57 @@
-type c8_address ;;
-type c8_register ;;
-type c8_byte ;;
-type c8_nibble ;;
+open Memory
+open State
+
+
+
+type c8_byte = int
+type c8_nibble  
+type c8_opcode = int
 
 
 type instruction =
-  | NOOP
-  | SYS                                              (* 0nnn *)
-  | CLS                                              (* 00E0 *)
-  | RET                                              (* 00EE *)
-  | JP      of c8_address                            (* 1nnn *)
-  | CALL    of c8_address                            (* 2nnn *)
-  | SE_rb   of c8_register * c8_byte                 (* 3xkk *)
-  | SNE_rb  of c8_register * c8_byte                 (* 4xkk *)
-  | SE_rr   of c8_register * c8_register             (* 5xy0 *)
-  | LD_rb   of c8_register * c8_byte                 (* 6xkk *)
-  | ADD_rb  of c8_register * c8_byte                 (* 7xkk *)
-  | LD_rr   of c8_register * c8_register             (* 8xy0 *)
-  | OR_rr   of c8_register * c8_register             (* 8xy1 *)
-  | AND_rr  of c8_register * c8_register             (* 8xy2 *)
-  | XOR_rr  of c8_register * c8_register             (* 8xy3 *)
-  | ADD_rr  of c8_register * c8_register             (* 8xy4 *)
-  | SUB_rr  of c8_register * c8_register             (* 8xy5 *)
-  | SHR_rr  of c8_register * c8_register             (* 8xy6 *)
-  | SUBN_rr of c8_register * c8_register             (* 8xy7 *)
-  | SHL_rr  of c8_register * c8_register             (* 8xyE *)
-  | SNE_rr  of c8_register * c8_register             (* 9xy0 *)
-  | LD_i    of c8_address                            (* Annn *)
-  | JP_0    of c8_address                            (* Bnnn *)
-  | RND     of c8_register * c8_byte                 (* Cxkk *)
-  | DRW     of c8_register * c8_register * c8_nibble (* Dxyn *)
-  | SKP     of c8_register                           (* Ex9E *)
-  | SKNP    of c8_register (*                           ExA1 *)
-  | LD_dtr  of c8_register                           (* Fx07 *)
-  | LD_key  of c8_register (*                           Fx0A *)
-  | LD_rdt  of c8_register                           (* Fx15 *)
-  | LD_str  of c8_register (*                           Fx18 *)
-  | ADD_i   of c8_register                           (* Fx1E *)
-  | LD_font of c8_register (*                           Fx29 *)
-  | LD_mem  of c8_register                           (* Fx33 *)
-  | LD_memi of c8_register (*                           Fx55 *)
-  | LD_regi of c8_register ;;                        (* Fx65 *)
+  | NoArg of  (c8_state -> c8_state)
+  | Reg of  (c8_state ->  c8_register ->  c8_state)
+  | Addr of  (c8_state ->  c8_address ->  c8_state)
+  | DReg of  (c8_state ->  c8_register ->  c8_register ->  c8_state)
+  | RegVal of  (c8_state ->  c8_register ->  c8_byte ->  c8_state)
+  | DRegVal of  (c8_state ->  c8_register ->  c8_register ->  c8_nibble ->  c8_state)
 
 
-let byte_to_instruction = fun _ -> NOOP
+let iNOOP    = NoArg (fun s -> s)
+let iSYS     = Addr  (fun s -> fun a -> set_pc s a) (* 0nnn *)               
+let iCLS     = NoArg (fun s -> s)                                    (* 00E0 *)
+let iRET     = NoArg (fun s -> s)                                          (* 00EE *)
+let iJP      = Addr (fun s -> fun a -> set_pc s a)   (* 1nnn *)
+let iCALL    = Addr (fun s -> fun a -> s)  (* 2nnn *)
+let iSE_rb   = RegVal (fun s -> fun reg -> fun v -> if reg == v then tick_pc s else s) (* 3xkk *)
+let iSNE_rb  = RegVal (fun s -> fun reg -> fun v -> if reg != v then tick_pc s else s) (* 4xkk *)
+let iSE_rr   = DReg   (fun s -> fun r1 -> fun r2 -> if r1 == r2 then tick_pc s else s) (* 5xy0 *)
+let iLD_rb   = RegVal (fun s -> fun reg -> fun v -> s)  (* 6xkk *)
+let iADD_rb  = RegVal (fun s -> fun reg -> fun v -> s) (* 7xkk *)
+let iLD_rr   = DReg (fun s -> fun r1 -> fun r2 -> s) (* 8xy0 *)
+let iOR_rr   = DReg (fun s -> fun r1 -> fun r2 -> s)  (* 8xy1 *)
+let iAND_rr  = DReg (fun s -> fun r1 -> fun r2 -> s)  (* 8xy2 *)
+let iXOR_rr  = DReg (fun s -> fun r1 -> fun r2 -> s)  (* 8xy3 *)
+let iADD_rr  = DReg (fun s -> fun r1 -> fun r2 -> s)  (* 8xy4 *)
+let iSUB_rr  = DReg (fun s -> fun r1 -> fun r2 -> s)  (* 8xy5 *)
+let iSHR_rr  = DReg (fun s -> fun r1 -> fun r2 -> s) (* 8xy6 *)
+let iLD_i    = Addr (fun s -> fun a -> s)(* Annn *)
+let iJP_0    = Addr (fun s -> fun a -> s)   (* Bnnn *)
+let iRND     = RegVal (fun s -> fun reg -> fun v -> s)  (* Cxkk *)
+let iDRW     = DRegVal (fun s -> fun r1 -> fun r2 -> fun v -> s)    (* Dxyn *)
+let iSKP     = Reg (fun s -> fun reg -> s)     (* Ex9E *)
+let iSKNP    = Reg (fun s -> fun reg -> s)    (* ExA1 *)
+let iLD_dtr  = Reg (fun s -> fun reg -> s)  (* Fx07 *)
+let iLD_key  = Reg (fun s -> fun reg -> s)  (* Fx0A *)
+let iLD_rdt  = Reg (fun s -> fun reg -> s)  (* Fx15 *)
+let iLD_str  = Reg (fun s -> fun reg -> s)  (* Fx18 *)
+let iADD_i   = Reg (fun s -> fun reg -> s)   (* Fx1E *)
+let iLD_font = Reg (fun s -> fun reg -> s) (* Fx29 *)
+let iLD_mem  = Reg (fun s -> fun reg -> s)  (* Fx33 *)
+let iLD_memi = Reg (fun s -> fun reg -> s) (* Fx55 *)
+let iLD_regi = Reg (fun s -> fun reg -> s) (* Fx65 *) 
+
+
+let opcode_to_instruction : c8_opcode -> instruction = fun _ -> iNOOP
+
+let fetch_instruction = fun mem -> fun addr -> opcode_to_instruction (fetch_opcode mem addr)
