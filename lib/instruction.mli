@@ -1,7 +1,5 @@
 open Memory
-
-type c8_byte ;;
-type c8_nibble ;;
+open Inttypes
 
 
 type instruction

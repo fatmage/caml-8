@@ -1,5 +1,6 @@
 open Memory
-type c8_register = int
+open Inttypes 
+
 type c8_key
 type c8_state 
 

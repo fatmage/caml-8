@@ -1,11 +1,6 @@
 open Memory
 open State
-
-
-
-type c8_byte = int
-type c8_nibble  
-type c8_opcode = int
+open Inttypes
 
 
 type instruction =
@@ -23,8 +18,8 @@ let iCLS     = NoArg (fun s -> s)                                    (* 00E0 *)
 let iRET     = NoArg (fun s -> s)                                          (* 00EE *)
 let iJP      = Addr (fun s -> fun a -> set_pc s a)   (* 1nnn *)
 let iCALL    = Addr (fun s -> fun a -> s)  (* 2nnn *)
-let iSE_rb   = RegVal (fun s -> fun reg -> fun v -> if reg == v then tick_pc s else s) (* 3xkk *)
-let iSNE_rb  = RegVal (fun s -> fun reg -> fun v -> if reg != v then tick_pc s else s) (* 4xkk *)
+let iSE_rb   = RegVal (fun s -> fun reg -> fun v -> if U8.eq reg v then tick_pc s else s) (* 3xkk *)
+let iSNE_rb  = RegVal (fun s -> fun reg -> fun v -> if U8.neq reg v then tick_pc s else s) (* 4xkk *)
 let iSE_rr   = DReg   (fun s -> fun r1 -> fun r2 -> if r1 == r2 then tick_pc s else s) (* 5xy0 *)
 let iLD_rb   = RegVal (fun s -> fun reg -> fun v -> s)  (* 6xkk *)
 let iADD_rb  = RegVal (fun s -> fun reg -> fun v -> s) (* 7xkk *)
