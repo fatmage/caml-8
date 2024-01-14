@@ -40,4 +40,4 @@ val iLD_mem  : instruction  (* Fx33 *)
 val iLD_memi : instruction  (* Fx55 *)
 val iLD_regi : instruction  (* Fx65 *) 
 
-val fetch_instruction : c8_memory -> c8_address -> instruction
+val fetch_instruction : c8_memory -> uint16 -> instruction

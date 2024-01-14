@@ -46,9 +46,3 @@ val u8_to_16 : U8.t -> U16.t
 val u16_to_8 : U16.t -> U8.t
 
 
-type c8_byte = uint8
-type c8_nibble = uint8
-type c8_register = uint8
-type c8_address = uint16
-type c8_opcode = uint16
-type c8_timer = uint16

@@ -95,10 +95,4 @@ let u8_to_16 : U8.t -> U16.t = fun u8 -> U16.of_int (U8.to_int u8)
 let u16_to_8 : U16.t -> U8.t = fun u16 -> U8.of_int (U16.to_int u16)
 
 
-type c8_byte = uint8
-type c8_nibble = uint8
-type c8_register = uint8
-type c8_address = uint16
-type c8_opcode = uint16
-type c8_timer = uint16
 
