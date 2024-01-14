@@ -28,7 +28,7 @@ kC : c8_key; kD : c8_key; kE : c8_key; kF : c8_key;
 }
 
 type c8_state = {
-  memory : c8_memory; pc : c8_address; keypad : c8_keypad; display : c8_display;
+  memory : c8_memory; pc : c8_address; keypad : c8_keypad; display : c8_display; stack : (c8_address list);
   v0 : c8_register; v1 : c8_register; v2 : c8_register; v3 : c8_register;
   v4 : c8_register; v5 : c8_register; v6 : c8_register; v7 : c8_register;
   v8 : c8_register; v9 : c8_register; vA : c8_register; vB : c8_register;
@@ -49,14 +49,16 @@ let tick_pc : c8_state -> c8_state = fun s -> {s with pc = U16.succ (U16.succ s.
 let get_pc  : c8_state -> c8_address = fun s -> s.pc
 
 let init_state = {
-  memory = init_mem; pc = U16.zero; keypad = keypad_empty; display = empty_display;
+  memory = init_mem; pc = U16.zero; keypad = keypad_empty; display = empty_display; stack = [];
   v0 = U8.zero ; v1 = U8.zero; v2 = U8.zero; v3 = U8.zero;
   v4 = U8.zero ; v5 = U8.zero; v6 = U8.zero; v7 = U8.zero;
   v8 = U8.zero ; v9 = U8.zero; vA = U8.zero; vB = U8.zero;
   vC = U8.zero ; vD = U8.zero; vE = U8.zero; vF = U8.zero;
   dT = U16.zero; sT = U16.zero; iR = U16.zero}
 
-
+let hd_stack : c8_state -> c8_address = fun s -> List.hd s.stack ;;
+let push_stack : c8_state -> c8_address -> c8_state = fun s -> fun a -> {s with stack = a :: s.stack}
+let pop_stack : c8_state -> c8_state = fun s -> {s with stack = List.tl s.stack}
 
 
 let get_reg : c8_state -> c8_byte -> c8_register = fun state -> fun index -> match U8.to_int index with
@@ -96,6 +98,10 @@ let set_reg : c8_state -> c8_byte -> c8_register -> c8_state = fun state -> fun 
   | 0xE -> {state with vE = v}
   | 0xF -> {state with vF = v}
   | _ -> failwith "Wrong register number"
+
+let set_flag : c8_state -> c8_register -> c8_state = fun state -> fun v -> set_reg state (U8.of_int 0xF) v
+
+
 
 
 

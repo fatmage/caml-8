@@ -4,6 +4,7 @@ module type IntType = sig
     val max_val : t 
     val zero : t
     val one : t  
+    val two: t
   
     val compare : t -> t -> int
     val eq : t -> t -> bool

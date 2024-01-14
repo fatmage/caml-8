@@ -7,6 +7,7 @@ module type IntType = sig
   val max_val : t 
   val zero : t
   val one : t  
+  val two : t
 
   val compare : t -> t -> int
   val eq : t -> t -> bool
@@ -44,6 +45,7 @@ let make_int_module : int -> (module IntType) = fun max_val -> (module struct
   let max_val = max_val
   let zero = 0
   let one = 1
+  let two = 2
 
   let compare = compare
   let eq = fun a -> fun b -> a == b 
