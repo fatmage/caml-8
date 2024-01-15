@@ -15,6 +15,35 @@ let empty_display : c8_display =
   in
     make_disp 32
 
+let xor_pixel_line : (c8_pixel list) -> (c8_pixel list) -> (c8_pixel list) = 
+  fun line1 line2 ->
+    List.map2 (fun p1 p2 -> match p1, p2 with 
+                              | PixelOff, PixelOn  -> PixelOn
+                              | PixelOn,  PixelOff -> PixelOn
+                              | PixelOff, PixelOff -> PixelOff
+                              | PixelOn,  PixelOn  -> PixelOff) line1 line2
+                     
+
+
+let rec update_line : c8_display -> (c8_pixel list) -> uint8 -> c8_display = 
+  fun disp line row -> 
+    if U8.eq row U8.zero then 
+      match disp with 
+        | x :: xs -> (xor_pixel_line x line) :: xs
+        | _ -> failwith "???"
+    else
+      match disp with 
+        | x :: xs -> x :: (update_line xs line (U8.pred row))
+        | _ -> failwith "???"
+
+let byte_to_line : uint8 -> uint8 -> c8_pixel list = 
+  fun byte col ->
+
+let draw_byte : c8_state -> uint8 -> uint8 -> uint8 -> c8_state =
+  fun state byte row col -> 
+
+  
+
 
 type c8_key = Pressed | NotPressed
 
@@ -33,6 +62,8 @@ let keypad_empty : c8_keypad = {
 }
 
 
+
+
 type c8_state = {
   memory  : c8_memory;  pc    : uint16;        keypad : c8_keypad; 
   display : c8_display; stack : (uint16 list); vI      : uint16;
@@ -43,12 +74,32 @@ type c8_state = {
   dT : uint8; sT : uint8; iR : U16.t
 }
 
+let get_key : c8_state -> uint8 -> c8_key = fun state key -> match U8.to_int key with
+| 0x0 -> state.keypad.k0
+| 0x1 -> state.keypad.k1
+| 0x2 -> state.keypad.k2
+| 0x3 -> state.keypad.k3
+| 0x4 -> state.keypad.k4
+| 0x5 -> state.keypad.k5
+| 0x6 -> state.keypad.k6
+| 0x7 -> state.keypad.k7
+| 0x8 -> state.keypad.k8
+| 0x9 -> state.keypad.k9
+| 0xA -> state.keypad.kA
+| 0xB -> state.keypad.kB
+| 0xC -> state.keypad.kC
+| 0xD -> state.keypad.kD
+| 0xE -> state.keypad.kE
+| 0xF -> state.keypad.kF
+| _ -> failwith "Wrong key number"
 
+
+let clear_disp : c8_state -> c8_state = fun s -> {s with display = empty_display}
 
 let set_mem : c8_state -> c8_memory -> c8_state = fun s -> fun m -> {s with memory = m}
 let get_mem : c8_state -> c8_memory = fun s -> s.memory
 let set_pc  : c8_state -> uint16 -> c8_state = fun s -> fun addr -> {s with pc = addr}
-let tick_pc : c8_state -> c8_state = fun s -> {s with pc = U16.succ (U16.succ s.pc) }
+let tick_pc : c8_state -> c8_state = fun s -> {s with pc = U16.succ (U16.succ s.pc)}
 let get_pc  : c8_state -> uint16 = fun s -> s.pc
 
 let init_state = {
@@ -104,6 +155,32 @@ let set_reg : c8_state -> uint8 -> uint8 -> c8_state = fun state -> fun index ->
   | _ -> failwith "Wrong register number"
 
 let set_flag : c8_state -> uint8 -> c8_state = fun state -> fun v -> set_reg state (U8.of_int 0xF) v
+
+let add_reg : c8_state -> uint8 -> uint8 -> c8_state  = fun state reg v -> set_reg state reg (U8.add (get_reg state reg) v)
+let sub_reg : c8_state -> uint8 -> uint8 -> c8_state  = fun state reg v -> set_reg state reg (U8.sub (get_reg state reg) v)
+
+let get_ir : c8_state -> uint16 = fun state -> state.vI
+let set_ir : c8_state -> uint16 -> c8_state = fun state addr -> {state with vI = addr}
+let add_ir : c8_state -> uint16 -> c8_state = fun state addr -> {state with vI = U16.add state.vI addr}
+
+let get_dt : c8_state -> uint8 = fun state -> state.dT
+let get_st : c8_state -> uint8 = fun state -> state.sT
+
+let set_dt : c8_state -> uint8 -> c8_state = fun state v -> {state with dT = v}
+let set_st : c8_state -> uint8 -> c8_state = fun state v -> {state with sT = v}
+
+let find_pressed : c8_state -> uint8 = fun state ->
+  let rec find_help : c8_state -> uint8 -> uint8 = fun state keynum ->
+    if U8.lte keynum (U8.of_int 0xF) then 
+      match get_key state keynum with
+        | Pressed -> keynum
+        | NotPressed -> find_help state (U8.succ keynum)
+    else keynum in
+    find_help state U8.zero
+
+
+let update_mem : c8_state -> uint16 -> uint8 -> c8_state = fun state addr v -> {state with memory = set_byte state.memory addr v}
+let fetch_mem : c8_state -> uint16 -> uint8 = fun state addr -> get_byte state.memory addr
 
 
 
