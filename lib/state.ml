@@ -36,11 +36,33 @@ let rec update_line : c8_display -> (c8_pixel list) -> uint8 -> c8_display =
         | x :: xs -> x :: (update_line xs line (U8.pred row))
         | _ -> failwith "???"
 
+
+let rec take_pixels : (c8_pixel list) -> int -> (c8_pixel list) =
+  fun pixels num -> match pixels, num with 
+    | [], _ -> []
+    | _, 0 -> []
+    | p::ps, x -> p :: (take_pixels ps (x - 1))
+
+let rec byte_to_arr : uint8 -> int -> (c8_pixel list) -> (c8_pixel list) = 
+  fun byte num acc  -> match num with
+    | 0 -> acc
+    | x -> byte_to_arr (U8.shr byte U8.one) (num - 1) (if (U8.rem byte U8.two) == U8.one then PixelOn :: acc else PixelOff :: acc)
+
 let byte_to_line : uint8 -> uint8 -> c8_pixel list = 
-  fun byte col ->
+  fun byte col -> 
+  let rec off_sequence num = match num with
+    | 0 -> []
+    | x -> PixelOff :: off_sequence (num - 1) in 
+  let right_len = 64 - ((U8.to_int col) + 8) in 
+  let right_seq = if right_len > 0 then off_sequence right_len else [] in
+  let left_seq = off_sequence (U8.to_int col) in
+  let middle = take_pixels (byte_to_arr byte 8 []) (if 64 - (U8.to_int col) > 0 then 64 - (U8.to_int col) else 0) in
+  left_seq @ middle @ right_seq 
 
 let draw_byte : c8_state -> uint8 -> uint8 -> uint8 -> c8_state =
   fun state byte row col -> 
+    let byte_line = byte_to_line byte col in 
+      
 
   
 
