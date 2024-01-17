@@ -1,71 +1,6 @@
 open Memory
 open Inttypes
-
-
-type c8_pixel = PixelOn | PixelOff
-type c8_display = (c8_pixel list) list
-
-let empty_display : c8_display = 
-  let rec make_row w = match w with
-    | 0 -> []
-    | x -> PixelOff :: (make_row (w - 1))
-  in let rec make_disp h = match h with
-    | 0 -> []
-    | x -> (make_row 64) :: (make_disp (h - 1))
-  in
-    make_disp 32
-
-let xor_pixel_line : (c8_pixel list) -> (c8_pixel list) -> (c8_pixel list) = 
-  fun line1 line2 ->
-    List.map2 (fun p1 p2 -> match p1, p2 with 
-                              | PixelOff, PixelOn  -> PixelOn
-                              | PixelOn,  PixelOff -> PixelOn
-                              | PixelOff, PixelOff -> PixelOff
-                              | PixelOn,  PixelOn  -> PixelOff) line1 line2
-                     
-
-
-let rec update_line : c8_display -> (c8_pixel list) -> uint8 -> c8_display = 
-  fun disp line row -> 
-    if U8.eq row U8.zero then 
-      match disp with 
-        | x :: xs -> (xor_pixel_line x line) :: xs
-        | _ -> failwith "???"
-    else
-      match disp with 
-        | x :: xs -> x :: (update_line xs line (U8.pred row))
-        | _ -> failwith "???"
-
-
-let rec take_pixels : (c8_pixel list) -> int -> (c8_pixel list) =
-  fun pixels num -> match pixels, num with 
-    | [], _ -> []
-    | _, 0 -> []
-    | p::ps, x -> p :: (take_pixels ps (x - 1))
-
-let rec byte_to_arr : uint8 -> int -> (c8_pixel list) -> (c8_pixel list) = 
-  fun byte num acc  -> match num with
-    | 0 -> acc
-    | x -> byte_to_arr (U8.shr byte U8.one) (num - 1) (if (U8.rem byte U8.two) == U8.one then PixelOn :: acc else PixelOff :: acc)
-
-let byte_to_line : uint8 -> uint8 -> c8_pixel list = 
-  fun byte col -> 
-  let rec off_sequence num = match num with
-    | 0 -> []
-    | x -> PixelOff :: off_sequence (num - 1) in 
-  let right_len = 64 - ((U8.to_int col) + 8) in 
-  let right_seq = if right_len > 0 then off_sequence right_len else [] in
-  let left_seq = off_sequence (U8.to_int col) in
-  let middle = take_pixels (byte_to_arr byte 8 []) (if 64 - (U8.to_int col) > 0 then 64 - (U8.to_int col) else 0) in
-  left_seq @ middle @ right_seq 
-
-let draw_byte : c8_state -> uint8 -> uint8 -> uint8 -> c8_state =
-  fun state byte row col -> 
-    let byte_line = byte_to_line byte col in 
-      
-
-  
-
+open Display
 
 type c8_key = Pressed | NotPressed
 
@@ -83,9 +18,6 @@ let keypad_empty : c8_keypad = {
   kC = NotPressed; kD = NotPressed; kE = NotPressed; kF = NotPressed;
 }
 
-
-
-
 type c8_state = {
   memory  : c8_memory;  pc    : uint16;        keypad : c8_keypad; 
   display : c8_display; stack : (uint16 list); vI      : uint16;
@@ -95,6 +27,33 @@ type c8_state = {
   vC : uint8; vD : uint8; vE : uint8; vF : uint8;
   dT : uint8; sT : uint8; iR : U16.t
 }
+
+let init_state = {
+  memory = init_mem; pc = U16.zero; keypad = keypad_empty; 
+  display = empty_display; stack = []; vI = U16.zero;
+  v0 = U8.zero ; v1 = U8.zero; v2 = U8.zero; v3 = U8.zero;
+  v4 = U8.zero ; v5 = U8.zero; v6 = U8.zero; v7 = U8.zero;
+  v8 = U8.zero ; v9 = U8.zero; vA = U8.zero; vB = U8.zero;
+  vC = U8.zero ; vD = U8.zero; vE = U8.zero; vF = U8.zero;
+  dT = U8.zero ; sT = U8.zero; iR = U16.zero}
+
+(*  ========================  DISPLAY  ========================  *)
+
+let rec get_sprite : c8_state -> uint16 -> uint8 -> uint8 -> ((c8_pixel list) list) =
+  fun state addr col height ->
+    match (U8.to_int height) with
+      | 0 -> []
+      | x ->  let byte = get_byte state.memory addr in
+              let byte_line = byte_to_line byte col in
+              byte_line :: (get_sprite state (U16.succ addr) col (U8.pred height))
+
+
+let draw_sprite : c8_state -> uint16 -> uint8 -> uint8 -> uint8 -> c8_state =
+  fun state addr row col height -> {state with display = draw_sprite_display state.display (get_sprite state addr col height) row}
+
+let clear_disp : c8_state -> c8_state = fun s -> {s with display = empty_display}
+              
+(*  ========================  KEYPAD  ========================  *)
 
 let get_key : c8_state -> uint8 -> c8_key = fun state key -> match U8.to_int key with
 | 0x0 -> state.keypad.k0
@@ -115,28 +74,36 @@ let get_key : c8_state -> uint8 -> c8_key = fun state key -> match U8.to_int key
 | 0xF -> state.keypad.kF
 | _ -> failwith "Wrong key number"
 
+let find_pressed : c8_state -> uint8 = fun state ->
+  let rec find_help : c8_state -> uint8 -> uint8 = fun state keynum ->
+    if U8.lte keynum (U8.of_int 0xF) then 
+      match get_key state keynum with
+        | Pressed -> keynum
+        | NotPressed -> find_help state (U8.succ keynum)
+    else keynum in
+    find_help state U8.zero
 
-let clear_disp : c8_state -> c8_state = fun s -> {s with display = empty_display}
+(*  ========================  MEMORY  ========================  *)
 
 let set_mem : c8_state -> c8_memory -> c8_state = fun s -> fun m -> {s with memory = m}
 let get_mem : c8_state -> c8_memory = fun s -> s.memory
+
+let update_mem : c8_state -> uint16 -> uint8 -> c8_state = fun state addr v -> {state with memory = set_byte state.memory addr v}
+let fetch_mem : c8_state -> uint16 -> uint8 = fun state addr -> get_byte state.memory addr
+
+(*  ========================  PROGRAM COUNTER  ========================  *)
+
 let set_pc  : c8_state -> uint16 -> c8_state = fun s -> fun addr -> {s with pc = addr}
 let tick_pc : c8_state -> c8_state = fun s -> {s with pc = U16.succ (U16.succ s.pc)}
 let get_pc  : c8_state -> uint16 = fun s -> s.pc
 
-let init_state = {
-  memory = init_mem; pc = U16.zero; keypad = keypad_empty; 
-  display = empty_display; stack = []; vI = U16.zero;
-  v0 = U8.zero ; v1 = U8.zero; v2 = U8.zero; v3 = U8.zero;
-  v4 = U8.zero ; v5 = U8.zero; v6 = U8.zero; v7 = U8.zero;
-  v8 = U8.zero ; v9 = U8.zero; vA = U8.zero; vB = U8.zero;
-  vC = U8.zero ; vD = U8.zero; vE = U8.zero; vF = U8.zero;
-  dT = U8.zero ; sT = U8.zero; iR = U16.zero}
+(*  ========================  STACK  ========================  *)
 
 let hd_stack : c8_state -> uint16 = fun s -> List.hd s.stack ;;
 let push_stack : c8_state -> uint16 -> c8_state = fun s -> fun a -> {s with stack = a :: s.stack}
 let pop_stack : c8_state -> c8_state = fun s -> {s with stack = List.tl s.stack}
 
+(*  ========================  REGISTERS  ========================  *)
 
 let get_reg : c8_state -> uint8 -> uint8 = fun state -> fun index -> match U8.to_int index with
   | 0x0 -> state.v0
@@ -185,40 +152,9 @@ let get_ir : c8_state -> uint16 = fun state -> state.vI
 let set_ir : c8_state -> uint16 -> c8_state = fun state addr -> {state with vI = addr}
 let add_ir : c8_state -> uint16 -> c8_state = fun state addr -> {state with vI = U16.add state.vI addr}
 
+(*  ========================  TIMERS  ========================  *)
 let get_dt : c8_state -> uint8 = fun state -> state.dT
 let get_st : c8_state -> uint8 = fun state -> state.sT
 
 let set_dt : c8_state -> uint8 -> c8_state = fun state v -> {state with dT = v}
 let set_st : c8_state -> uint8 -> c8_state = fun state v -> {state with sT = v}
-
-let find_pressed : c8_state -> uint8 = fun state ->
-  let rec find_help : c8_state -> uint8 -> uint8 = fun state keynum ->
-    if U8.lte keynum (U8.of_int 0xF) then 
-      match get_key state keynum with
-        | Pressed -> keynum
-        | NotPressed -> find_help state (U8.succ keynum)
-    else keynum in
-    find_help state U8.zero
-
-
-let update_mem : c8_state -> uint16 -> uint8 -> c8_state = fun state addr v -> {state with memory = set_byte state.memory addr v}
-let fetch_mem : c8_state -> uint16 -> uint8 = fun state addr -> get_byte state.memory addr
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

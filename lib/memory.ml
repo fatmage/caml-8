@@ -5,7 +5,7 @@ type c8_memory =
  | MemNode of c8_memory * c8_memory
  | MemLeaf of uint8 
 
-let init_mem =
+let empty_mem =
   let rec mem_help n =
     match n with
       | 0 -> MemLeaf (U8.zero)
@@ -58,5 +58,29 @@ let fetch_opcode mem pc =
       fetch_odd mem pc_int 2048
 
 
+let rec load_mem : c8_memory -> uint16 -> (uint8 list) -> c8_memory =
+  fun mem addr values ->
+    match values with
+      | [] -> mem
+      | x :: xs -> load_mem (set_byte mem addr x) (U16.succ addr) xs
+
+let init_mem : c8_memory = 
+  let fontset =  [(U8.of_int 0xF0); (U8.of_int 0x90); (U8.of_int 0x90); (U8.of_int 0x90); (U8.of_int 0xF0);    (*0*)
+                  (U8.of_int 0x20); (U8.of_int 0x60); (U8.of_int 0x20); (U8.of_int 0x20); (U8.of_int 0x70);    (*1*)
+                  (U8.of_int 0xF0); (U8.of_int 0x10); (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0xF0);    (*2*)
+                  (U8.of_int 0xF0); (U8.of_int 0x10); (U8.of_int 0xF0); (U8.of_int 0x10); (U8.of_int 0xF0);    (*3*)
+                  (U8.of_int 0x90); (U8.of_int 0x90); (U8.of_int 0xF0); (U8.of_int 0x10); (U8.of_int 0x10);    (*4*)
+                  (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0xF0); (U8.of_int 0x10); (U8.of_int 0xF0);    (*5*)
+                  (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0xF0); (U8.of_int 0x90); (U8.of_int 0xF0);    (*6*)
+                  (U8.of_int 0xF0); (U8.of_int 0x10); (U8.of_int 0x20); (U8.of_int 0x40); (U8.of_int 0x40);    (*7*)
+                  (U8.of_int 0xF0); (U8.of_int 0x90); (U8.of_int 0xF0); (U8.of_int 0x90); (U8.of_int 0xF0);    (*8*)
+                  (U8.of_int 0xF0); (U8.of_int 0x90); (U8.of_int 0xF0); (U8.of_int 0x10); (U8.of_int 0xF0);    (*9*)
+                  (U8.of_int 0xF0); (U8.of_int 0x90); (U8.of_int 0xF0); (U8.of_int 0x90); (U8.of_int 0x90);    (*A*)
+                  (U8.of_int 0xE0); (U8.of_int 0x90); (U8.of_int 0xE0); (U8.of_int 0x90); (U8.of_int 0xE0);    (*B*)
+                  (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0x80); (U8.of_int 0x80); (U8.of_int 0xF0);    (*C*)
+                  (U8.of_int 0xE0); (U8.of_int 0x90); (U8.of_int 0x90); (U8.of_int 0x90); (U8.of_int 0xE0);    (*D*)
+                  (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0xF0);    (*E*)
+                  (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0x80)] in (*F*)
+load_mem empty_mem U16.zero fontset
 
 
