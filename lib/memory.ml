@@ -61,8 +61,9 @@ let fetch_opcode mem pc =
 let rec load_mem : c8_memory -> uint16 -> (uint8 list) -> c8_memory =
   fun mem addr values ->
     match values with
-      | [] -> mem
       | x :: xs -> load_mem (set_byte mem addr x) (U16.succ addr) xs
+      | [] -> mem
+
 
 let init_mem : c8_memory = 
   let fontset =  [(U8.of_int 0xF0); (U8.of_int 0x90); (U8.of_int 0x90); (U8.of_int 0x90); (U8.of_int 0xF0);    (*0*)
@@ -82,5 +83,10 @@ let init_mem : c8_memory =
                   (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0xF0);    (*E*)
                   (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0xF0); (U8.of_int 0x80); (U8.of_int 0x80)] in (*F*)
 load_mem empty_mem U16.zero fontset
+
+
+let rec load_mem_from_file : c8_memory -> uint16 -> in_channel -> c8_memory =
+  fun mem addr file -> try load_mem_from_file (set_byte mem addr (U8.of_int (input_byte file))) (U16.succ addr) file with End_of_file -> mem
+
 
 

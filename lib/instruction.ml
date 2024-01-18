@@ -1,9 +1,8 @@
-open Memory
 open State
 open Inttypes
 
 
-type instruction =
+type c8_instruction =
   | NoArg of (c8_state -> c8_state)
   | Reg   of (c8_state ->  uint8 ->  c8_state)
   | Addr  of (c8_state ->  uint16 ->  c8_state)
@@ -90,7 +89,7 @@ let iLD_regi = Reg    (fun s reg -> let rec helper = fun s ir curr max ->
                                         tick_pc (add_ir (helper s (get_ir s) U8.zero reg) U16.one))                     (* Fx65 *) 
 
 
-let opcode_to_instruction : uint16 -> instruction = 
+let decode_opcode : uint16 -> c8_instruction = 
   fun opcode -> let opcode_int = U16.to_int opcode in 
                   match opcode_int with 
                     | 0x00E0 -> iCLS
@@ -142,7 +141,3 @@ let opcode_to_instruction : uint16 -> instruction =
                                                 | _ -> iNOOP
                                               end
                                 | _ -> iNOOP
-
-
-
-let fetch_instruction : c8_memory -> uint16 -> instruction = fun mem addr -> opcode_to_instruction (fetch_opcode mem addr)
