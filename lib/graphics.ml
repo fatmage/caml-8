@@ -47,55 +47,55 @@ let draw_graphics display renderer =
 type events = {exit : bool; space_pressed : bool; left_pressed : bool; right_pressed : bool; keypad_down : (uint8 list); keypad_up : (uint8 list)}
 
 
-let handle_event cpu curr_events =
+let handle_event curr_events =
   let event = Sdl.Event.create () in
   if Sdl.poll_event (Some event) then begin
     match Sdl.Event.(get event typ |> enum) with
     | `Key_down ->
       let scancode = Sdl.Event.(get event keyboard_scancode) in
       begin match Sdl.Scancode.enum scancode with
-        | `K1     -> {curr_events with keypad_down =  (U8.of_int 0x1) :: curr_events.keypad_down}
-        | `K2     -> {curr_events with keypad_down =  (U8.of_int 0x2) :: curr_events.keypad_down}
-        | `K3     -> {curr_events with keypad_down =  (U8.of_int 0x3) :: curr_events.keypad_down}
-        | `K4     -> {curr_events with keypad_down =  (U8.of_int 0xC) :: curr_events.keypad_down}
-        | `Q      -> {curr_events with keypad_down =  (U8.of_int 0x4) :: curr_events.keypad_down}
-        | `W      -> {curr_events with keypad_down =  (U8.of_int 0x5) :: curr_events.keypad_down}
-        | `E      -> {curr_events with keypad_down =  (U8.of_int 0x6) :: curr_events.keypad_down}
-        | `R      -> {curr_events with keypad_down =  (U8.of_int 0xD) :: curr_events.keypad_down}
-        | `A      -> {curr_events with keypad_down =  (U8.of_int 0x7) :: curr_events.keypad_down}
-        | `S      -> {curr_events with keypad_down =  (U8.of_int 0x8) :: curr_events.keypad_down}
-        | `D      -> {curr_events with keypad_down =  (U8.of_int 0x9) :: curr_events.keypad_down}
-        | `F      -> {curr_events with keypad_down =  (U8.of_int 0xE) :: curr_events.keypad_down}
-        | `Z      -> {curr_events with keypad_down =  (U8.of_int 0xA) :: curr_events.keypad_down}
-        | `X      -> {curr_events with keypad_down =  (U8.of_int 0x0) :: curr_events.keypad_down}
-        | `C      -> {curr_events with keypad_down =  (U8.of_int 0xB) :: curr_events.keypad_down}
-        | `V      -> {curr_events with keypad_down =  (U8.of_int 0xF) :: curr_events.keypad_down}
+        | `K1     -> {curr_events with keypad_down =  (U8.of_int 0x1) :: curr_events.keypad_down} |> handle_event 
+        | `K2     -> {curr_events with keypad_down =  (U8.of_int 0x2) :: curr_events.keypad_down} |> handle_event 
+        | `K3     -> {curr_events with keypad_down =  (U8.of_int 0x3) :: curr_events.keypad_down} |> handle_event 
+        | `K4     -> {curr_events with keypad_down =  (U8.of_int 0xC) :: curr_events.keypad_down} |> handle_event 
+        | `Q      -> {curr_events with keypad_down =  (U8.of_int 0x4) :: curr_events.keypad_down} |> handle_event 
+        | `W      -> {curr_events with keypad_down =  (U8.of_int 0x5) :: curr_events.keypad_down} |> handle_event 
+        | `E      -> {curr_events with keypad_down =  (U8.of_int 0x6) :: curr_events.keypad_down} |> handle_event 
+        | `R      -> {curr_events with keypad_down =  (U8.of_int 0xD) :: curr_events.keypad_down} |> handle_event 
+        | `A      -> {curr_events with keypad_down =  (U8.of_int 0x7) :: curr_events.keypad_down} |> handle_event 
+        | `S      -> {curr_events with keypad_down =  (U8.of_int 0x8) :: curr_events.keypad_down} |> handle_event 
+        | `D      -> {curr_events with keypad_down =  (U8.of_int 0x9) :: curr_events.keypad_down} |> handle_event 
+        | `F      -> {curr_events with keypad_down =  (U8.of_int 0xE) :: curr_events.keypad_down} |> handle_event 
+        | `Z      -> {curr_events with keypad_down =  (U8.of_int 0xA) :: curr_events.keypad_down} |> handle_event 
+        | `X      -> {curr_events with keypad_down =  (U8.of_int 0x0) :: curr_events.keypad_down} |> handle_event 
+        | `C      -> {curr_events with keypad_down =  (U8.of_int 0xB) :: curr_events.keypad_down} |> handle_event 
+        | `V      -> {curr_events with keypad_down =  (U8.of_int 0xF) :: curr_events.keypad_down} |> handle_event 
 
         | _       ->  curr_events
       end
     | `Key_up -> 
       let scancode = Sdl.Event.(get event keyboard_scancode) in
       begin match Sdl.Scancode.enum scancode with 
-      | `K1     -> {curr_events with keypad_down =  (U8.of_int 0x1) :: curr_events.keypad_down}
-      | `K2     -> {curr_events with keypad_down =  (U8.of_int 0x2) :: curr_events.keypad_down}
-      | `K3     -> {curr_events with keypad_down =  (U8.of_int 0x3) :: curr_events.keypad_down}
-      | `K4     -> {curr_events with keypad_down =  (U8.of_int 0xC) :: curr_events.keypad_down}
-      | `Q      -> {curr_events with keypad_down =  (U8.of_int 0x4) :: curr_events.keypad_down}
-      | `W      -> {curr_events with keypad_down =  (U8.of_int 0x5) :: curr_events.keypad_down}
-      | `E      -> {curr_events with keypad_down =  (U8.of_int 0x6) :: curr_events.keypad_down}
-      | `R      -> {curr_events with keypad_down =  (U8.of_int 0xD) :: curr_events.keypad_down}
-      | `A      -> {curr_events with keypad_down =  (U8.of_int 0x7) :: curr_events.keypad_down}
-      | `S      -> {curr_events with keypad_down =  (U8.of_int 0x8) :: curr_events.keypad_down}
-      | `D      -> {curr_events with keypad_down =  (U8.of_int 0x9) :: curr_events.keypad_down}
-      | `F      -> {curr_events with keypad_down =  (U8.of_int 0xE) :: curr_events.keypad_down}
-      | `Z      -> {curr_events with keypad_down =  (U8.of_int 0xA) :: curr_events.keypad_down}
-      | `X      -> {curr_events with keypad_down =  (U8.of_int 0x0) :: curr_events.keypad_down}
-      | `C      -> {curr_events with keypad_down =  (U8.of_int 0xB) :: curr_events.keypad_down}
-      | `V      -> {curr_events with keypad_down =  (U8.of_int 0xF) :: curr_events.keypad_down}
-      | `Escape -> {curr_events with exit = true}
-      | `Space  -> {curr_events with space_pressed = true}
-      | `Left   -> {curr_events with left_pressed = true}
-      | `Right  -> {curr_events with right_pressed = true}
+      | `K1     -> {curr_events with keypad_down =  (U8.of_int 0x1) :: curr_events.keypad_down} |> handle_event 
+      | `K2     -> {curr_events with keypad_down =  (U8.of_int 0x2) :: curr_events.keypad_down} |> handle_event 
+      | `K3     -> {curr_events with keypad_down =  (U8.of_int 0x3) :: curr_events.keypad_down} |> handle_event 
+      | `K4     -> {curr_events with keypad_down =  (U8.of_int 0xC) :: curr_events.keypad_down} |> handle_event 
+      | `Q      -> {curr_events with keypad_down =  (U8.of_int 0x4) :: curr_events.keypad_down} |> handle_event 
+      | `W      -> {curr_events with keypad_down =  (U8.of_int 0x5) :: curr_events.keypad_down} |> handle_event 
+      | `E      -> {curr_events with keypad_down =  (U8.of_int 0x6) :: curr_events.keypad_down} |> handle_event 
+      | `R      -> {curr_events with keypad_down =  (U8.of_int 0xD) :: curr_events.keypad_down} |> handle_event 
+      | `A      -> {curr_events with keypad_down =  (U8.of_int 0x7) :: curr_events.keypad_down} |> handle_event 
+      | `S      -> {curr_events with keypad_down =  (U8.of_int 0x8) :: curr_events.keypad_down} |> handle_event 
+      | `D      -> {curr_events with keypad_down =  (U8.of_int 0x9) :: curr_events.keypad_down} |> handle_event 
+      | `F      -> {curr_events with keypad_down =  (U8.of_int 0xE) :: curr_events.keypad_down} |> handle_event 
+      | `Z      -> {curr_events with keypad_down =  (U8.of_int 0xA) :: curr_events.keypad_down} |> handle_event 
+      | `X      -> {curr_events with keypad_down =  (U8.of_int 0x0) :: curr_events.keypad_down} |> handle_event 
+      | `C      -> {curr_events with keypad_down =  (U8.of_int 0xB) :: curr_events.keypad_down} |> handle_event 
+      | `V      -> {curr_events with keypad_down =  (U8.of_int 0xF) :: curr_events.keypad_down} |> handle_event 
+      | `Escape -> {curr_events with exit = true}                                               |> handle_event                              
+      | `Space  -> {curr_events with space_pressed = true}                                      |> handle_event 
+      | `Left   -> {curr_events with left_pressed = true}                                       |> handle_event 
+      | `Right  -> {curr_events with right_pressed = true}                                      |> handle_event 
       | _       ->  curr_events
     end
     | `Quit   -> {curr_events with exit = true}
