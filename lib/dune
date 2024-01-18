@@ -1,3 +1,4 @@
 (library
  (name caml_8_lib)
+ (libraries tsdl)
  (flags (:standard -w -66)))

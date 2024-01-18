@@ -20,22 +20,22 @@ let keypad_empty : c8_keypad = {
 
 type c8_state = {
   memory  : c8_memory;  pc    : uint16;        keypad : c8_keypad; 
-  display : c8_display; stack : (uint16 list); vI      : uint16;
+  display : c8_display; stack : (uint16 list); 
   v0 : uint8; v1 : uint8; v2 : uint8; v3 : uint8;
   v4 : uint8; v5 : uint8; v6 : uint8; v7 : uint8;
   v8 : uint8; v9 : uint8; vA : uint8; vB : uint8;
   vC : uint8; vD : uint8; vE : uint8; vF : uint8;
-  dT : uint8; sT : uint8; iR : U16.t
+  dT : uint8; sT : uint8; vI      : uint16;
 }
 
 let init_state = {
   memory = init_mem; pc = U16.zero; keypad = keypad_empty; 
-  display = empty_display; stack = []; vI = U16.zero;
+  display = empty_display; stack = [];
   v0 = U8.zero ; v1 = U8.zero; v2 = U8.zero; v3 = U8.zero;
   v4 = U8.zero ; v5 = U8.zero; v6 = U8.zero; v7 = U8.zero;
   v8 = U8.zero ; v9 = U8.zero; vA = U8.zero; vB = U8.zero;
   vC = U8.zero ; vD = U8.zero; vE = U8.zero; vF = U8.zero;
-  dT = U8.zero ; sT = U8.zero; iR = U16.zero}
+  dT = U8.zero ; sT = U8.zero; vI = U16.zero; }
 
 (*  ========================  DISPLAY  ========================  *)
 
@@ -158,3 +158,8 @@ let get_st : c8_state -> uint8 = fun state -> state.sT
 
 let set_dt : c8_state -> uint8 -> c8_state = fun state v -> {state with dT = v}
 let set_st : c8_state -> uint8 -> c8_state = fun state v -> {state with sT = v}
+
+let tick_dt : c8_state -> c8_state = fun state -> {state with dT = U8.pred state.dT}
+let tick_st : c8_state -> c8_state = fun state -> {state with dT = U8.pred state.sT}
+
+let tick_timers : c8_state -> c8_state = fun state -> state |> tick_dt |> tick_st

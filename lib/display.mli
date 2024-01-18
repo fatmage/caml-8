@@ -1,7 +1,7 @@
 open Inttypes
 
-type c8_pixel
-type c8_display
+type c8_pixel = PixelOn | PixelOff
+type c8_display = (c8_pixel list) list
 
 val empty_display : c8_display 
 

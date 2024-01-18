@@ -96,6 +96,7 @@ let decode_opcode : uint16 -> c8_instruction =
                     | 0x00EE -> iRET
                     | x ->  let opcode_int = U16.to_int (U16.logand opcode (U16.of_int 0xF000)) in 
                               match opcode_int with
+                                | 0x0000 -> iSYS
                                 | 0x1000 -> iJP
                                 | 0x2000 -> iCALL
                                 | 0x3000 -> iSE_rb

@@ -1,5 +1,5 @@
 (executable
  (public_name caml-8)
  (name caml_8)
- (libraries caml_8_lib)
+ (libraries caml_8_lib tsdl)
  (flags (:standard -w -24)))
