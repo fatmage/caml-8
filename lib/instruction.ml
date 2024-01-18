@@ -50,10 +50,10 @@ let iJP_0    = Addr   (fun s a -> set_pc s (U16.add (u8_to_16 (get_reg s (U8.of_
 let iRND     = RegV   (fun s reg v -> tick_pc (set_reg s reg (U8.logand (get_reg s reg) (U8.of_int (Random.int 256))))) (* Cxkk *)
 let iDRW     = DRegV  (fun s r1 r2 v -> tick_pc (draw_sprite s (get_ir s) (U8.rem (get_reg s r2) (U8.of_int 32)) 
                                                                           (U8.rem (get_reg s r1) (U8.of_int 64)) v))    (* Dxyn *)
-let iSKP     = Reg    (fun s reg -> match get_key s (get_reg s reg) with
+let iSKP     = Reg    (fun s reg -> match check_key s (get_reg s reg) with
                                       | Pressed -> tick_pc (tick_pc s)
                                       | NotPressed -> tick_pc s)                                                        (* Ex9E *)
-let iSKNP    = Reg    (fun s reg -> match get_key s (get_reg s reg) with
+let iSKNP    = Reg    (fun s reg -> match check_key s (get_reg s reg) with
                                       | NotPressed -> tick_pc (tick_pc s)
                                       | Pressed -> tick_pc s)                                                           (* ExA1 *)
 let iLD_dtr  = Reg    (fun s reg -> tick_pc (set_reg s reg (get_dt s)))                                                 (* Fx07 *)
