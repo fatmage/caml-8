@@ -63,7 +63,8 @@ let rec debugger_loop : c8_state -> int -> c8_state =
     else debugger_loop (tick_cpu state timer_tick) (if timer_tick == 1 then timer_frame_ratio else timer_tick - 1) *)
 
 
-let load_rom : in_channel -> c8_state = fun file_channel -> init_state file_channel
+let load_rom : in_channel -> c8_state = fun file_channel -> 
+  init_state file_channel
 
 
 

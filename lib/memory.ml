@@ -14,48 +14,56 @@ let empty_mem =
     mem_help 12 ;;
 
 let get_byte mem index =
-  let rec helper mem index key =
+  let rec helper mem index left right =
     match mem with 
       | MemLeaf i -> i
       | MemNode (l, r) ->
-        if index < key then helper l index (key / 2) else helper r index (key + (key / 2))
+        let m = (left + right)/2 in
+        if index < m then 
+          helper l index left m else 
+          helper r index m right
   in  
-    helper mem (U16.to_int index) 2048 ;;
+    helper mem (U16.to_int index) 0 4096 ;;
 
 let set_byte mem index v =
-  let rec helper mem index key v =
+  let rec helper mem index left right v =
     match mem with
       | MemLeaf _ -> MemLeaf (v)
       | MemNode (l, r) ->
-        if index < key then 
-          MemNode ((helper l index (key / 2) v), r) else
-          MemNode (l, (helper r index (key + (key / 2)) v))
+        let m = (left + right)/2 in
+        if index < m then 
+          MemNode ((helper l index left m v), r) else
+          MemNode (l, (helper r index m right v))
   in
-    helper mem (U16.to_int index) 2048 v ;;
+    helper mem (U16.to_int index) 0 4096 v ;;
 
 let glue_bytes b1 b2 = U16.add (U16.shl (u8_to_16 b1) (U16.of_int 8)) (u8_to_16 b2)
 
 let fetch_opcode mem pc =
-  let rec fetch_even mem pc key =
+  let rec fetch_even mem pc left right =
     match mem with
     | MemLeaf _ -> failwith "too greedily, too deep"
     | MemNode (l, r) -> match l, r with 
-      | MemNode (_, _), MemNode (_, _) -> if pc < key then fetch_even l pc (key / 2) 
-                                                          else fetch_even r pc (key + (key / 2))
+      | MemNode (_, _), MemNode (_, _) -> 
+        let m = (left + right)/2 in
+        if pc < m then fetch_even l pc left m
+          else fetch_even r pc m right
       | MemLeaf il, MemLeaf ir -> glue_bytes il ir
       | _, _ -> failwith "WAT"
-  in let rec fetch_odd mem pc key =
+  in let rec fetch_odd mem pc left right =
     match mem with
       | MemLeaf _ -> failwith "WAT"
       | MemNode (l, r) -> match l, r with
         | MemNode (MemLeaf _, MemLeaf rl), MemNode (MemLeaf lr, MemLeaf _) ->  glue_bytes rl lr 
-        | _, _ -> if pc < key then fetch_odd l pc (key / 2)
-                                else fetch_odd r pc (key + (key / 2))
+        | _, _ ->
+        let m = (left + right)/2 in
+        if pc < m then fetch_odd l pc left m
+          else fetch_odd r pc m right
   in let pc_int = U16.to_int pc in
     if pc_int mod 2 == 0 then 
-      fetch_even mem pc_int 2048
+      fetch_even mem pc_int 0 4096
     else
-      fetch_odd mem pc_int 2048
+      fetch_odd mem pc_int 0 4096
 
 
 let rec load_mem : c8_memory -> uint16 -> (uint8 list) -> c8_memory =
@@ -86,7 +94,12 @@ load_mem empty_mem U16.zero fontset
 
 
 let rec load_mem_from_file : c8_memory -> uint16 -> in_channel -> c8_memory =
-  fun mem addr file -> try load_mem_from_file (set_byte mem addr (U8.of_int (input_byte file))) (U16.succ addr) file with End_of_file -> mem
+  fun mem addr file -> try 
+    let b = (U8.of_int (input_byte file)) in 
+    let memset = (set_byte mem addr b) in
+    load_mem_from_file memset (U16.succ addr) file 
+    with End_of_file -> mem 
+
 
 
 
