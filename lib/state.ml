@@ -225,7 +225,7 @@ let get_st : c8_state -> uint8 = fun state -> state.sT
 let set_dt : c8_state -> uint8 -> c8_state = fun state v -> {state with dT = v}
 let set_st : c8_state -> uint8 -> c8_state = fun state v -> {state with sT = v}
 
-let tick_dt : c8_state -> c8_state = fun state -> {state with dT = U8.pred state.dT}
-let tick_st : c8_state -> c8_state = fun state -> {state with dT = U8.pred state.sT}
+let tick_dt : c8_state -> c8_state = fun state -> {state with dT = if U8.gt state.dT U8.zero then U8.pred state.dT else state.dT}
+let tick_st : c8_state -> c8_state = fun state -> {state with sT = if U8.gt state.sT U8.zero then U8.pred state.sT else state.sT}
 
 let tick_timers : c8_state -> c8_state = fun state -> state |> tick_dt |> tick_st
