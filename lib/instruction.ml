@@ -41,9 +41,9 @@ let iSUB_rr  = DReg   (fun s r1 r2 -> print_string "8xy5\n"; tick_pc (let flag_r
 let iSHR_rr  = DReg   (fun s r1 r2 -> print_string "8xy6\n"; tick_pc (let flag_res = U8.logand U8.one (get_reg s r2) in 
                                                 set_reg (set_flag s flag_res) r1 (U8.shr (get_reg s r2) U8.one)))       (* 8xy6 *)
 let iSUBN_rr = DReg   (fun s r1 r2 -> print_string "8xy7\n"; tick_pc (let flag_res = if U8.lte (get_reg s r1) (get_reg s r2) then U8.one else U8.zero in 
-                                                set_reg (set_flag s flag_res) r1 (U8.sub (get_reg s r1) (get_reg s r2))))  (* 8xy7 *)
+                                                                      set_reg (set_flag s flag_res) r1 (U8.sub (get_reg s r1) (get_reg s r2))))  (* 8xy7 *)
 let iSHL_rr  = DReg   (fun s r1 r2 -> print_string "8xyE\n"; tick_pc (let flag_res = U8.logand U8.one (U8.shr (get_reg s r2) (U8.of_int 7)) in 
-                                                set_reg (set_flag s flag_res) r1 (U8.shr (get_reg s r2) U8.one)))       (* 8xyE *)
+                                                                      set_reg (set_flag s flag_res) r1 (U8.shr (get_reg s r2) U8.one)))       (* 8xyE *)
 let iSNE_rr  = DReg   (fun s r1 r2 -> print_string "9xy0\n"; tick_pc (if U8.neq (get_reg s r1) (get_reg s r2) then tick_pc s else s))          (* 9xy0 *)
 let iLD_i    = Addr   (fun s a -> print_string "Annn\n"; tick_pc (set_ir s a))                                                                 (* Annn *)
 let iJP_0    = Addr   (fun s a -> print_string "Bnnn\n"; set_pc s (U16.add (u8_to_16 (get_reg s (U8.of_int 0x0))) a))                          (* Bnnn *)

@@ -79,7 +79,10 @@ let get_key : c8_keypad -> uint8 -> c8_key = fun keypad key ->
     | 0xF -> keypad.kF
     | _ -> failwith "Wrong key number"
 
-let check_key : c8_state -> uint8 -> c8_key = fun state key -> get_key state.keypad key
+let check_key : c8_state -> uint8 -> c8_key = fun state key -> 
+  print_string (U8.to_string key);
+  print_string " to byl klawisz\n";
+   get_key state.keypad key
 
 let press_key : c8_keypad -> uint8 -> c8_keypad = fun keypad key ->
   match U8.to_int key with
@@ -226,6 +229,6 @@ let set_dt : c8_state -> uint8 -> c8_state = fun state v -> {state with dT = v}
 let set_st : c8_state -> uint8 -> c8_state = fun state v -> {state with sT = v}
 
 let tick_dt : c8_state -> c8_state = fun state -> {state with dT = if U8.gt state.dT U8.zero then U8.pred state.dT else state.dT}
-let tick_st : c8_state -> c8_state = fun state -> {state with sT = if U8.gt state.sT U8.zero then U8.pred state.sT else state.sT}
+let tick_st : c8_state -> c8_state = fun state -> {state with sT = if U8.gt state.sT  U8.zero then U8.pred state.sT else state.sT}
 
 let tick_timers : c8_state -> c8_state = fun state -> state |> tick_dt |> tick_st
