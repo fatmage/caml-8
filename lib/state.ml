@@ -169,6 +169,12 @@ let get_pc  : c8_state -> uint16 = fun s -> s.pc
 (*  ========================  STACK  ========================  *)
 
 let hd_stack : c8_state -> uint16 = fun s -> List.hd s.stack ;;
+let stack_depth : c8_state -> uint8 = fun s -> 
+  let rec depth_internal : (uint16 list) -> uint8 -> uint8 = fun stack acc-> 
+    match stack with
+      | [] -> acc
+      | x :: xs -> depth_internal xs (U8.succ acc) in 
+  depth_internal s.stack U8.zero
 let push_stack : c8_state -> uint16 -> c8_state = fun s -> fun a -> {s with stack = a :: s.stack}
 let pop_stack : c8_state -> c8_state = fun s -> {s with stack = List.tl s.stack}
 

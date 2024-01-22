@@ -39,7 +39,7 @@ let set_byte mem index v =
 
 let glue_bytes b1 b2 = U16.add (U16.shl (u8_to_16 b1) (U16.of_int 8)) (u8_to_16 b2)
 
-let fetch_opcode mem pc =
+let fetch_opcode : c8_memory -> uint16 -> uint16 = fun mem pc ->
   let rec fetch_even mem pc left right =
     match mem with
     | MemLeaf _ -> failwith "too greedily, too deep"
