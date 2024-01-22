@@ -56,7 +56,6 @@ let rec interpreter_loop : state_history -> c8_state -> float (* last_time *) ->
       interpreter_loop history state t dt timer_tick renderer
 and debugger_loop : state_history -> c8_state -> int -> Sdl.renderer -> c8_state =
   fun history state timer_tick renderer -> 
-    
     draw_graphics (get_display state) renderer;
     draw_debug_info state renderer;
     let keyboard_events = clear_events |> handle_events in 
@@ -67,7 +66,12 @@ and debugger_loop : state_history -> c8_state -> int -> Sdl.renderer -> c8_state
     else if keyboard_events.left_pressed  then let new_history = move_left history in 
                                               clear_graphics renderer;
                                               debugger_loop new_history (get_from_history new_history) timer_tick renderer
-    else if keyboard_events.right_pressed then let new_history = move_right history in 
+    else if keyboard_events.right_pressed then if history_up_to_date history then
+                                              let new_state = tick_cpu state timer_tick in
+                                              let new_history = add_to_history history new_state in 
+                                              debugger_loop new_history new_state (if timer_tick == 1 then timer_frame_ratio else timer_tick - 1) renderer
+                                              else
+                                              let new_history = move_right history in 
                                               clear_graphics renderer;
                                               debugger_loop new_history (get_from_history new_history) timer_tick renderer
     else debugger_loop history state timer_tick renderer

@@ -14,7 +14,7 @@ type c8_instruction =
 let iNOOP    = NoArg  (fun s -> print_string "NOOP\n"; tick_pc s)
 let iSYS     = Addr   (fun s a -> print_string "0nnn\n";  set_pc s a)                                                                           (* 0nnn *)               
 let iCLS     = NoArg  (fun s -> print_string "00E0\n";  tick_pc (clear_disp s))                                                                 (* 00E0 *) 
-let iRET     = NoArg  (fun s -> print_string "00EE\n";  tick_pc (pop_stack (set_pc s (hd_stack s))))                                            (* 00EE *)
+let iRET     = NoArg  (fun s -> print_string "00EE\n";  pop_stack (set_pc s (hd_stack s)))                                                     (* 00EE *)
 let iJP      = Addr   (fun s a -> print_string "1nnn\n";  set_pc s a)                                                                           (* 1nnn *)
 let iCALL    = Addr   (fun s a -> print_string "2nnn\n";  set_pc (push_stack s (U16.add (get_pc s) U16.two)) a)                                 (* 2nnn *)
 let iSE_rb   = RegV   (fun s reg v -> print_string "3xkk\n";  if U8.eq (get_reg s reg) v then tick_pc (tick_pc s) else tick_pc s)               (* 3xkk *)
@@ -41,14 +41,14 @@ let iSUB_rr  = DReg   (fun s r1 r2 -> print_string "8xy5\n"; tick_pc (let flag_r
 let iSHR_rr  = DReg   (fun s r1 r2 -> print_string "8xy6\n"; tick_pc (let flag_res = U8.logand U8.one (get_reg s r2) in 
                                                 set_reg (set_flag s flag_res) r1 (U8.shr (get_reg s r2) U8.one)))       (* 8xy6 *)
 let iSUBN_rr = DReg   (fun s r1 r2 -> print_string "8xy7\n"; tick_pc (let flag_res = if U8.lte (get_reg s r1) (get_reg s r2) then U8.one else U8.zero in 
-                                                                      set_reg (set_flag s flag_res) r1 (U8.sub (get_reg s r1) (get_reg s r2))))  (* 8xy7 *)
+                                                                      set_reg (set_flag s flag_res) r1 (U8.sub (get_reg s r2) (get_reg s r1))))  (* 8xy7 *)
 let iSHL_rr  = DReg   (fun s r1 r2 -> print_string "8xyE\n"; tick_pc (let flag_res = U8.logand U8.one (U8.shr (get_reg s r2) (U8.of_int 7)) in 
-                                                                      set_reg (set_flag s flag_res) r1 (U8.shr (get_reg s r2) U8.one)))       (* 8xyE *)
+                                                                      set_reg (set_flag s flag_res) r1 (U8.shl (get_reg s r2) U8.one)))       (* 8xyE *)
 let iSNE_rr  = DReg   (fun s r1 r2 -> print_string "9xy0\n"; tick_pc (if U8.neq (get_reg s r1) (get_reg s r2) then tick_pc s else s))          (* 9xy0 *)
 let iLD_i    = Addr   (fun s a -> print_string "Annn\n"; tick_pc (set_ir s a))                                                                 (* Annn *)
 let iJP_0    = Addr   (fun s a -> print_string "Bnnn\n"; set_pc s (U16.add (u8_to_16 (get_reg s (U8.of_int 0x0))) a))                          (* Bnnn *)
 let iRND     = RegV   (fun s reg v -> print_string "Cxkk\n"; tick_pc (set_reg s reg (U8.logand (get_reg s reg) (U8.of_int (Random.int 256))))) (* Cxkk *)
-let iDRW     = DRegV  (fun s r1 r2 v -> print_string "Dxyb\n"; tick_pc (draw_sprite s (get_ir s) (U8.rem (get_reg s r2) (U8.of_int 32)) 
+let iDRW     = DRegV  (fun s r1 r2 v -> print_string "Dxyn\n"; tick_pc (draw_sprite s (get_ir s) (U8.rem (get_reg s r2) (U8.of_int 32)) 
                                                                           (U8.rem (get_reg s r1) (U8.of_int 64)) v))    (* Dxyn *)
 let iSKP     = Reg    (fun s reg -> print_string "Ex9E\n"; match check_key s (get_reg s reg) with
                                       | Pressed -> tick_pc (tick_pc s)

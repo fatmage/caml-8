@@ -20,6 +20,11 @@ let move_right : state_history -> state_history = fun sl ->
     | x :: xs -> {left = x :: sl.left; right = xs}
     | [] -> sl
 
+let history_up_to_date : state_history -> bool = fun sl ->
+  match sl.right with 
+    | [] -> true
+    | _  -> false
+
 let get_from_history : state_history -> c8_state = fun sl -> sl.left |> List.hd
 
 

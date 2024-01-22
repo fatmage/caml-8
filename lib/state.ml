@@ -168,7 +168,9 @@ let get_pc  : c8_state -> uint16 = fun s -> s.pc
 
 (*  ========================  STACK  ========================  *)
 
-let hd_stack : c8_state -> uint16 = fun s -> List.hd s.stack ;;
+let hd_stack : c8_state -> uint16 = fun s -> match s.stack with
+                                              | [] -> U16.zero 
+                                              | x :: xs -> x
 let stack_depth : c8_state -> uint8 = fun s -> 
   let rec depth_internal : (uint16 list) -> uint8 -> uint8 = fun stack acc-> 
     match stack with

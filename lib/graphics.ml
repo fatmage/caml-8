@@ -134,12 +134,17 @@ let draw_timers : c8_state -> Sdl.renderer -> unit = fun state renderer ->
   draw_string (state |> get_dt |> U8.to_hexstring) col_2_start (row_start + 5 * letter_h) renderer;
   draw_string (state |> get_st |> U8.to_hexstring) col_2_start (row_start + 6 * letter_h) renderer
 
+let draw_stack : c8_state -> Sdl.renderer -> unit = fun state renderer ->
+  draw_string (state |> stack_depth |> U8.to_hexstring) col_2_start (row_start + 8 * letter_h) renderer;
+  draw_string (state |> hd_stack |> U16.to_hexstring) col_2_start (row_start + 9 * letter_h) renderer
+
 let draw_state : c8_state -> Sdl.renderer -> unit = fun state renderer ->
   draw_registers state renderer;
   draw_PC state renderer;
   draw_opcode state renderer;
   draw_IR state renderer;
-  draw_timers state renderer
+  draw_timers state renderer;
+  draw_stack state renderer
 
 
   
@@ -152,7 +157,7 @@ let draw_debug_info : c8_state -> Sdl.renderer -> unit = fun state renderer ->
   Sdl.render_copy ~src:src ~dst:target renderer texture |> or_print;
   draw_state state renderer;
   Sdl.render_present renderer;
-  Sdl.destroy_texture texture;
+  Sdl.destroy_texture texture
 
 
 

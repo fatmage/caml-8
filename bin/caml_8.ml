@@ -9,6 +9,7 @@ let () =
     prerr_endline "Usage : main <file name>";
     exit 2
   end;
+  Random.self_init ();
   let rom_channel = open_in_bin argv.(1) in
   let renderer = init_graphics () in
   let t = Sys.time () in
