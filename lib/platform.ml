@@ -8,6 +8,9 @@ open Tsdl
 open State_history
 
 
+let print_space str = print_string str; print_string " "
+
+
 
 
 let fetch_decode_execute : c8_state -> c8_state =
@@ -15,13 +18,22 @@ let fetch_decode_execute : c8_state -> c8_state =
                 let instruction : c8_instruction = decode_opcode opcode in
                 match instruction with
                   | NoArg op -> op state
-                  | Reg   op -> op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
-                  | Addr  op -> op state                    (U16.logand opcode (U16.of_int 0x0FFF))
-                  | DReg  op -> op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
+                  | Reg   op -> print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)));
+                                op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
+                  | Addr  op -> print_space (U16.to_hexstring ((U16.logand opcode (U16.of_int 0x0FFF))));
+                                op state                    (U16.logand opcode (U16.of_int 0x0FFF))
+                  | DReg  op -> print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)));
+                                print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x00F0)) (U16.of_int 4)));
+                                op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
                                          (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x00F0)) (U16.of_int 4))) 
-                  | RegV  op -> op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
+                  | RegV  op -> print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)));
+                                print_space (U16.to_hexstring (U16.logand opcode (U16.of_int 0x00FF)));                    
+                                op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
                                          (u16_to_8          (U16.logand opcode (U16.of_int 0x00FF)))
-                  | DRegV op -> op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
+                  | DRegV op -> print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)));
+                                print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x00F0)) (U16.of_int 4)));
+                                print_space (U16.to_hexstring (U16.logand opcode (U16.of_int 0x000F)));
+                                op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
                                          (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x00F0)) (U16.of_int 4))) 
                                          (u16_to_8          (U16.logand opcode (U16.of_int 0x000F))) 
 

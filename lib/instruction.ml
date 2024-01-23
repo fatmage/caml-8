@@ -1,6 +1,7 @@
 open State
 open Inttypes
 
+let _ = Random.self_init()
 
 type c8_instruction =
   | NoArg of (c8_state -> c8_state)
@@ -19,7 +20,7 @@ let iJP      = Addr   (fun s a -> print_string "1nnn\n";  set_pc s a)           
 let iCALL    = Addr   (fun s a -> print_string "2nnn\n";  set_pc (push_stack s (U16.add (get_pc s) U16.two)) a)                                 (* 2nnn *)
 let iSE_rb   = RegV   (fun s reg v -> print_string "3xkk\n";  if U8.eq (get_reg s reg) v then tick_pc (tick_pc s) else tick_pc s)               (* 3xkk *)
 let iSNE_rb  = RegV   (fun s reg v -> print_string "4xkk\n";  if U8.neq (get_reg s reg) v then tick_pc (tick_pc s) else tick_pc s)              (* 4xkk *)
-let iSE_rr   = DReg   (fun s r1 r2 -> print_string "5xy0\n"; if r1 == r2 then tick_pc (tick_pc s) else tick_pc s)                              (* 5xy0 *)
+let iSE_rr   = DReg   (fun s r1 r2 -> print_string "5xy0\n"; if (get_reg s r1) == (get_reg s r2) then tick_pc (tick_pc s) else tick_pc s)                              (* 5xy0 *)
 let iLD_rb   = RegV   (fun s reg v -> print_string "6xkk\n"; tick_pc (set_reg s reg v))                                                        (* 6xkk *)
 let iADD_rb  = RegV   (fun s reg v -> print_string "7xkk\n"; tick_pc (add_reg s reg v))                                                        (* 7xkk *)
 let iLD_rr   = DReg   (fun s r1 r2 -> print_string "8xy0\n"; tick_pc (set_reg s r1 (get_reg s r2)))                                            (* 8xy0 *)
@@ -35,15 +36,15 @@ let iADD_rr  = DReg   (fun s r1 r2 -> print_string "8xy4\n"; tick_pc (let res_in
                                                                 U8.one else 
                                                                 U8.zero)))                                              (* 8xy4 *)
 let iSUB_rr  = DReg   (fun s r1 r2 -> print_string "8xy5\n"; tick_pc (let flag_res = if U8.gte (get_reg s r1) (get_reg s r2) then 
-                                                                U8.one else 
-                                                                U8.zero in 
-                                                                  sub_reg (set_flag s flag_res) r1 (get_reg s r2)))     (* 8xy5 *)
+                                                                      U8.one else 
+                                                                      U8.zero in 
+                                                                      set_flag (sub_reg s r1 (get_reg s r2)) flag_res))     (* 8xy5 *)
 let iSHR_rr  = DReg   (fun s r1 r2 -> print_string "8xy6\n"; tick_pc (let flag_res = U8.logand U8.one (get_reg s r2) in 
-                                                set_reg (set_flag s flag_res) r1 (U8.shr (get_reg s r2) U8.one)))       (* 8xy6 *)
+                                                set_flag (set_reg s r1 (U8.shr (get_reg s r2) U8.one)) flag_res))       (* 8xy6 *)
 let iSUBN_rr = DReg   (fun s r1 r2 -> print_string "8xy7\n"; tick_pc (let flag_res = if U8.lte (get_reg s r1) (get_reg s r2) then U8.one else U8.zero in 
-                                                                      set_reg (set_flag s flag_res) r1 (U8.sub (get_reg s r2) (get_reg s r1))))  (* 8xy7 *)
+                                                                      set_flag (set_reg s r1 (U8.sub (get_reg s r2) (get_reg s r1))) flag_res))  (* 8xy7 *)
 let iSHL_rr  = DReg   (fun s r1 r2 -> print_string "8xyE\n"; tick_pc (let flag_res = U8.logand U8.one (U8.shr (get_reg s r2) (U8.of_int 7)) in 
-                                                                      set_reg (set_flag s flag_res) r1 (U8.shl (get_reg s r2) U8.one)))       (* 8xyE *)
+                                                                      set_flag (set_reg s r1 (U8.shl (get_reg s r2) U8.one)) flag_res))       (* 8xyE *)
 let iSNE_rr  = DReg   (fun s r1 r2 -> print_string "9xy0\n"; tick_pc (if U8.neq (get_reg s r1) (get_reg s r2) then tick_pc s else s))          (* 9xy0 *)
 let iLD_i    = Addr   (fun s a -> print_string "Annn\n"; tick_pc (set_ir s a))                                                                 (* Annn *)
 let iJP_0    = Addr   (fun s a -> print_string "Bnnn\n"; set_pc s (U16.add (u8_to_16 (get_reg s (U8.of_int 0x0))) a))                          (* Bnnn *)
@@ -58,7 +59,7 @@ let iSKNP    = Reg    (fun s reg -> print_string "ExA1\n"; match check_key s (ge
                                       | Pressed -> tick_pc s)                                                           (* ExA1 *)
 let iLD_dtr  = Reg    (fun s reg -> print_string "Fx07\n"; tick_pc (set_reg s reg (get_dt s)))                                                 (* Fx07 *)
 let iLD_key  = Reg    (fun s reg -> print_string "Fx0A\n"; match U8.to_int (find_pressed s) with 
-                                      | 0x10 -> s
+                                      | 0x10 -> print_string "nic nie znalezlismy\n"; s
                                       | x -> tick_pc (set_reg s reg (U8.of_int x)))                                     (* Fx0A *)
 let iLD_rdt  = Reg    (fun s reg -> print_string "Fx15\n"; tick_pc (set_dt s (get_reg s reg)))                                                 (* Fx15 *)
 let iLD_str  = Reg    (fun s reg -> print_string "Fx18\n"; tick_pc (set_st s (get_reg s reg)))                                                 (* Fx18 *)
@@ -82,10 +83,10 @@ let iLD_memi = Reg    (fun s reg -> print_string "Fx55\n"; let rec helper = fun 
                                         update_mem s ir (get_reg s curr) in
                                         tick_pc (add_ir (helper s (get_ir s) U8.zero reg) U16.one))                     (* Fx55 *)
 let iLD_regi = Reg    (fun s reg -> print_string "Fx65\n"; let rec helper = fun s ir curr max ->
-                                      if U8.lt curr max then
+                                      if U8.lte curr max then
                                         helper (set_reg s curr (fetch_mem s ir)) (U16.succ ir) (U8.succ curr) max 
                                       else
-                                        set_reg s curr (fetch_mem s ir) in 
+                                        s in 
                                         tick_pc (add_ir (helper s (get_ir s) U8.zero reg) U16.one))                     (* Fx65 *) 
 
 

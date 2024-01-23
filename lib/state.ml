@@ -80,8 +80,8 @@ let get_key : c8_keypad -> uint8 -> c8_key = fun keypad key ->
     | _ -> failwith "Wrong key number"
 
 let check_key : c8_state -> uint8 -> c8_key = fun state key -> 
-  print_string (U8.to_string key);
-  print_string " to byl klawisz\n";
+  (* print_string (U8.to_string key);
+  print_string " to byl klawisz\n"; *)
    get_key state.keypad key
 
 let press_key : c8_keypad -> uint8 -> c8_keypad = fun keypad key ->
@@ -147,7 +147,7 @@ let find_pressed : c8_state -> uint8 = fun state ->
       match get_key state.keypad keynum with
         | Pressed -> keynum
         | NotPressed -> find_help state (U8.succ keynum)
-    else keynum in
+    else (U8.of_int 0x10) in
     find_help state U8.zero
 
 
