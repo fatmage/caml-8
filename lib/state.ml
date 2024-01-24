@@ -1,22 +1,7 @@
-open Memory
 open Inttypes
+open Memory
 open Display
-
-type c8_key = Pressed | NotPressed
-
-type c8_keypad = {
-  k0 : c8_key; k1 : c8_key; k2 : c8_key; k3 : c8_key;
-  k4 : c8_key; k5 : c8_key; k6 : c8_key; k7 : c8_key;
-  k8 : c8_key; k9 : c8_key; kA : c8_key; kB : c8_key;
-  kC : c8_key; kD : c8_key; kE : c8_key; kF : c8_key;
-}
-
-let keypad_empty : c8_keypad = {
-  k0 = NotPressed; k1 = NotPressed; k2 = NotPressed; k3 = NotPressed;
-  k4 = NotPressed; k5 = NotPressed; k6 = NotPressed; k7 = NotPressed;
-  k8 = NotPressed; k9 = NotPressed; kA = NotPressed; kB = NotPressed;
-  kC = NotPressed; kD = NotPressed; kE = NotPressed; kF = NotPressed;
-}
+open Keypad
 
 
 type c8_state = {
@@ -40,6 +25,10 @@ let init_state = fun file_channel -> {
 
 (*  ========================  DISPLAY  ========================  *)
 
+let clear_disp : c8_state -> c8_state = fun s -> {s with display = empty_display}
+
+let get_display : c8_state -> c8_display = fun state -> state.display
+
 let rec get_sprite : c8_state -> uint16 -> uint8 -> uint8 -> ((c8_pixel list) list) =
   fun state addr col height ->
     match (U8.to_int height) with
@@ -53,91 +42,24 @@ let draw_sprite : c8_state -> uint16 -> uint8 -> uint8 -> uint8 -> c8_state =
     let disp_new = draw_sprite_display state.display (get_sprite state addr col height) row in
     let flag_res = check_for_flag state.display disp_new in
     {state with display = disp_new; vF = flag_res}
-
-let clear_disp : c8_state -> c8_state = fun s -> {s with display = empty_display}
-
-let get_display : c8_state -> c8_display = fun state -> state.display
               
 (*  ========================  KEYPAD  ========================  *)
 
 
-let get_key : c8_keypad -> uint8 -> c8_key = 
-  fun keypad key -> 
-    match U8.to_int key with
-      | 0x0 -> keypad.k0
-      | 0x1 -> keypad.k1
-      | 0x2 -> keypad.k2
-      | 0x3 -> keypad.k3
-      | 0x4 -> keypad.k4
-      | 0x5 -> keypad.k5
-      | 0x6 -> keypad.k6
-      | 0x7 -> keypad.k7
-      | 0x8 -> keypad.k8
-      | 0x9 -> keypad.k9
-      | 0xA -> keypad.kA
-      | 0xB -> keypad.kB
-      | 0xC -> keypad.kC
-      | 0xD -> keypad.kD
-      | 0xE -> keypad.kE
-      | 0xF -> keypad.kF
-      | _ -> failwith "Wrong key number"
-
 let check_key : c8_state -> uint8 -> c8_key = fun state key -> get_key state.keypad key
-
-let press_key : c8_keypad -> uint8 -> c8_keypad = 
-  fun keypad key ->
-    match U8.to_int key with
-      | 0x0 -> {keypad with k0 = (if keypad.k0 == NotPressed then Pressed else keypad.k0)}
-      | 0x1 -> {keypad with k1 = (if keypad.k1 == NotPressed then Pressed else keypad.k1)}
-      | 0x2 -> {keypad with k2 = (if keypad.k2 == NotPressed then Pressed else keypad.k2)}
-      | 0x3 -> {keypad with k3 = (if keypad.k3 == NotPressed then Pressed else keypad.k3)}
-      | 0x4 -> {keypad with k4 = (if keypad.k4 == NotPressed then Pressed else keypad.k4)}
-      | 0x5 -> {keypad with k5 = (if keypad.k5 == NotPressed then Pressed else keypad.k5)}
-      | 0x6 -> {keypad with k6 = (if keypad.k6 == NotPressed then Pressed else keypad.k6)}
-      | 0x7 -> {keypad with k7 = (if keypad.k7 == NotPressed then Pressed else keypad.k7)}
-      | 0x8 -> {keypad with k8 = (if keypad.k8 == NotPressed then Pressed else keypad.k8)}
-      | 0x9 -> {keypad with k9 = (if keypad.k9 == NotPressed then Pressed else keypad.k9)}
-      | 0xA -> {keypad with kA = (if keypad.kA == NotPressed then Pressed else keypad.kA)}
-      | 0xB -> {keypad with kB = (if keypad.kB == NotPressed then Pressed else keypad.kB)}
-      | 0xC -> {keypad with kC = (if keypad.kC == NotPressed then Pressed else keypad.kC)}
-      | 0xD -> {keypad with kD = (if keypad.kD == NotPressed then Pressed else keypad.kD)}
-      | 0xE -> {keypad with kE = (if keypad.kE == NotPressed then Pressed else keypad.kE)}
-      | 0xF -> {keypad with kF = (if keypad.kF == NotPressed then Pressed else keypad.kF)}
-      | _ -> failwith "Wrong key number"
-
-let release_key : c8_keypad -> uint8 -> c8_keypad = 
-  fun keypad key ->
-    match U8.to_int key with
-      | 0x0 -> {keypad with k0 = (if keypad.k0 == Pressed then NotPressed else keypad.k0)}
-      | 0x1 -> {keypad with k1 = (if keypad.k1 == Pressed then NotPressed else keypad.k1)}
-      | 0x2 -> {keypad with k2 = (if keypad.k2 == Pressed then NotPressed else keypad.k2)}
-      | 0x3 -> {keypad with k3 = (if keypad.k3 == Pressed then NotPressed else keypad.k3)}
-      | 0x4 -> {keypad with k4 = (if keypad.k4 == Pressed then NotPressed else keypad.k4)}
-      | 0x5 -> {keypad with k5 = (if keypad.k5 == Pressed then NotPressed else keypad.k5)}
-      | 0x6 -> {keypad with k6 = (if keypad.k6 == Pressed then NotPressed else keypad.k6)}
-      | 0x7 -> {keypad with k7 = (if keypad.k7 == Pressed then NotPressed else keypad.k7)}
-      | 0x8 -> {keypad with k8 = (if keypad.k8 == Pressed then NotPressed else keypad.k8)}
-      | 0x9 -> {keypad with k9 = (if keypad.k9 == Pressed then NotPressed else keypad.k9)}
-      | 0xA -> {keypad with kA = (if keypad.kA == Pressed then NotPressed else keypad.kA)}
-      | 0xB -> {keypad with kB = (if keypad.kB == Pressed then NotPressed else keypad.kB)}
-      | 0xC -> {keypad with kC = (if keypad.kC == Pressed then NotPressed else keypad.kC)}
-      | 0xD -> {keypad with kD = (if keypad.kD == Pressed then NotPressed else keypad.kD)}
-      | 0xE -> {keypad with kE = (if keypad.kE == Pressed then NotPressed else keypad.kE)}
-      | 0xF -> {keypad with kF = (if keypad.kF == Pressed then NotPressed else keypad.kF)}
-      | _ -> failwith "Wrong key number"
 
 
 let rec keypad_up : c8_keypad -> (uint8 list) -> c8_keypad =
   fun keypad released ->
     match released with 
       | [] -> keypad 
-      | x :: xs -> keypad_up (release_key keypad x) xs
+      | x :: xs -> keypad_up (set_key keypad x NotPressed) xs
 
 let rec keypad_down : c8_keypad -> (uint8 list) -> c8_keypad =
   fun keypad pressed ->
     match pressed with
       | [] -> keypad 
-      | x :: xs -> keypad_down (press_key keypad x) xs
+      | x :: xs -> keypad_down (set_key keypad x Pressed) xs
 
 let update_keypad : c8_state -> (uint8 list) -> (uint8 list) -> c8_state =
   fun state pressed released -> {state with keypad = keypad_up (keypad_down state.keypad pressed) released}
@@ -145,14 +67,14 @@ let update_keypad : c8_state -> (uint8 list) -> (uint8 list) -> c8_state =
 
 let find_pressed : c8_state -> uint8 = 
   fun state ->
-    let rec find_help : c8_state -> uint8 -> uint8 = 
-      fun state keynum ->
-        if U8.lte keynum (U8.of_int 0xF) then 
-          match get_key state.keypad keynum with
-            | Pressed -> keynum
-            | NotPressed -> find_help state (U8.succ keynum)
-        else (U8.of_int 0x10) in
-        find_help state U8.zero
+  let rec find_help : c8_state -> uint8 -> uint8 = 
+    fun state keynum ->
+      if U8.lte keynum (U8.of_int 0xF) then 
+        match get_key state.keypad keynum with
+          | Pressed -> keynum
+          | NotPressed -> find_help state (U8.succ keynum)
+      else (U8.of_int 0x10) in
+      find_help state U8.zero
 
 
 
@@ -169,8 +91,9 @@ let fetch_opcode : c8_state -> uint16 = fun state -> get_current_opcode state.me
 (*  ========================  PROGRAM COUNTER  ========================  *)
 
 let set_pc  : c8_state -> uint16 -> c8_state = fun s -> fun addr -> {s with pc = addr}
-let tick_pc : c8_state -> c8_state = fun s -> {s with pc = U16.succ (U16.succ s.pc)}
 let get_pc  : c8_state -> uint16 = fun s -> s.pc
+let tick_pc : c8_state -> c8_state = fun s -> {s with pc = U16.succ (U16.succ s.pc)}
+
 
 (*  ========================  STACK  ========================  *)
 

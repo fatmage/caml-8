@@ -1,7 +1,5 @@
-open State
 open Inttypes
-
-
+open State
 
 type c8_instruction =
   | NoArg of (c8_state -> c8_state)
@@ -20,7 +18,7 @@ let iJP      = Addr   (fun s a ->   set_pc s a)                                 
 let iCALL    = Addr   (fun s a ->   set_pc (push_stack s (U16.add (get_pc s) U16.two)) a)                                 (* 2nnn *)
 let iSE_rb   = RegV   (fun s reg v ->    if U8.eq (get_reg s reg) v then tick_pc (tick_pc s) else tick_pc s)               (* 3xkk *)
 let iSNE_rb  = RegV   (fun s reg v ->   if U8.neq (get_reg s reg) v then tick_pc (tick_pc s) else tick_pc s)              (* 4xkk *)
-let iSE_rr   = DReg   (fun s r1 r2 ->   if (get_reg s r1) == (get_reg s r2) then tick_pc (tick_pc s) else tick_pc s)                              (* 5xy0 *)
+let iSE_rr   = DReg   (fun s r1 r2 ->   if (get_reg s r1) == (get_reg s r2) then tick_pc (tick_pc s) else tick_pc s)            (* 5xy0 *)
 let iLD_rb   = RegV   (fun s reg v ->   tick_pc (set_reg s reg v))                                                        (* 6xkk *)
 let iADD_rb  = RegV   (fun s reg v ->   tick_pc (add_reg s reg v))                                                        (* 7xkk *)
 let iLD_rr   = DReg   (fun s r1 r2 ->  tick_pc (set_reg s r1 (get_reg s r2)))                                            (* 8xy0 *)
@@ -50,7 +48,7 @@ let iLD_i    = Addr   (fun s a -> tick_pc (set_ir s a))                         
 let iJP_0    = Addr   (fun s a -> set_pc s (U16.add (u8_to_16 (get_reg s (U8.of_int 0x0))) a))                          (* Bnnn *)
 let iRND     = RegV   (fun s reg v ->  tick_pc (set_reg s reg (U8.logand v (U8.of_int (Random.int 256))))) (* Cxkk *)
 let iDRW     = DRegV  (fun s r1 r2 v ->  tick_pc (draw_sprite s (get_ir s) (U8.rem (get_reg s r2) (U8.of_int 32)) 
-                                                                          (U8.rem (get_reg s r1) (U8.of_int 64)) v))    (* Dxyn *)
+                                                                           (U8.rem (get_reg s r1) (U8.of_int 64)) v))    (* Dxyn *)
 let iSKP     = Reg    (fun s reg -> match check_key s (get_reg s reg) with
                                       | Pressed -> tick_pc (tick_pc s)
                                       | NotPressed -> tick_pc s)                                                        (* Ex9E *)

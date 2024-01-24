@@ -7,6 +7,16 @@ open Tsdl
 open State_history
 
 
+let timer_time = 1. /. 60.
+let timer_frame_ratio = 20
+let frame_time = timer_time /. (float_of_int timer_frame_ratio)
+
+
+let load_rom : in_channel -> c8_state = fun file_channel -> 
+  init_state file_channel
+
+
+
 let fetch_decode_execute : c8_state -> c8_state =
   fun state ->  let opcode : uint16 = fetch_opcode state in
                 let instruction : c8_instruction = decode_opcode opcode in
@@ -22,19 +32,11 @@ let fetch_decode_execute : c8_state -> c8_state =
                                          (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x00F0)) (U16.of_int 4))) 
                                          (u16_to_8          (U16.logand opcode (U16.of_int 0x000F))) 
 
-
-
+                                         
 let tick_cpu : c8_state -> int -> c8_state = fun state timer_tick ->
   match timer_tick with
     | 1 -> state |> tick_timers |> fetch_decode_execute
     | x -> fetch_decode_execute state
-
-
-let timer_time = 1. /. 60.
-let timer_frame_ratio = 20
-let frame_time = timer_time /. (float_of_int timer_frame_ratio)
-
-
 
 let rec interpreter_loop : state_history -> c8_state -> float (* last_time *) -> float (* time_sum *) -> int -> Sdl.renderer -> c8_state =
   fun history state last_time time_sum timer_tick renderer ->
@@ -77,8 +79,7 @@ and debugger_loop : state_history -> c8_state -> int -> Sdl.renderer -> c8_state
 
 
 
-let load_rom : in_channel -> c8_state = fun file_channel -> 
-  init_state file_channel
+
 
 
 
