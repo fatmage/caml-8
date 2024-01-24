@@ -67,3 +67,20 @@ let rec draw_sprite_display : c8_display -> ((c8_pixel list) list) -> uint8 -> c
       end
     | c :: cs, x -> c :: (draw_sprite_display cs sprite (U8.pred row))
 
+let rec check_for_flag : c8_display -> c8_display -> uint8 = fun disp1 disp2 ->
+  let rec check_row : (c8_pixel list) -> (c8_pixel list) -> uint8 = fun l1 l2 ->
+  match l1, l2 with 
+    | x :: xs, y :: ys -> begin match x, y with 
+                            | PixelOn, PixelOff -> U8.one 
+                            | _, _ -> check_row xs ys end
+    | [], [] -> U8.zero
+    | _, _ -> failwith "rows not of equal length" in
+  match disp1, disp2 with 
+    | x :: xs, y :: ys -> let row_res = U8.to_int (check_row x y) in
+                          begin match row_res with 
+                            | 0 -> check_for_flag xs ys 
+                            | 1 -> U8.one 
+                            | _ -> failwith "not reachable" end
+    | [], [] -> U8.zero 
+    | _, _ -> failwith "columns not of equal length"
+

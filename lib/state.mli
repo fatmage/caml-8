@@ -7,7 +7,6 @@ type c8_state
 
 val init_state : in_channel -> c8_state
 
-
 val clear_disp : c8_state -> c8_state
 val draw_sprite : c8_state -> uint16 -> uint8 -> uint8 -> uint8 -> c8_state
 val get_display : c8_state -> c8_display
@@ -16,6 +15,7 @@ val set_mem : c8_state -> c8_memory -> c8_state
 val get_mem : c8_state -> c8_memory 
 val update_mem : c8_state -> uint16 -> uint8 -> c8_state
 val fetch_mem : c8_state -> uint16 -> uint8 
+val fetch_opcode: c8_state -> uint16
 
 val set_pc : c8_state -> uint16 -> c8_state
 val get_pc : c8_state -> uint16

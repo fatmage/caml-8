@@ -1,12 +1,7 @@
 open Tsdl
 open Display
 open State
-open Memory
 open Inttypes
-
-
-
-
 
 
 let or_exit : ('a, [< `Msg of string ]) result -> 'a = function
@@ -122,7 +117,7 @@ let draw_PC : c8_state -> Sdl.renderer -> unit = fun state renderer ->
   draw_string (state |> get_pc |> U16.to_hexstring) col_2_start row_start renderer
 
 let draw_opcode : c8_state -> Sdl.renderer -> unit = fun state renderer ->
-  let opcode = fetch_opcode (get_mem state) (get_pc state) in
+  let opcode = fetch_opcode state in
   let op_str_raw = U16.to_hexstring opcode in
   let opcode_str = String.sub op_str_raw 2 ((String.length op_str_raw) - 2) in
   draw_string opcode_str col_2_start (row_start + 1 * letter_h) renderer
@@ -139,12 +134,6 @@ let draw_stack : c8_state -> Sdl.renderer -> unit = fun state renderer ->
   draw_string (state |> stack_depth |> U8.to_hexstring) col_2_start (row_start + 9 * letter_h) renderer;
   draw_string (state |> hd_stack |> U16.to_hexstring) col_2_start (row_start + 10 * letter_h) renderer
 
-let draw_opcode_peculiar : c8_state -> Sdl.renderer -> unit = fun state renderer ->
-  let opcode = fetch_opcode (get_mem state) (U16.of_int 0x31A) in
-  let op_str_raw = U16.to_hexstring opcode in
-  let opcode_str = String.sub op_str_raw 2 ((String.length op_str_raw) - 2) in
-  draw_string opcode_str col_2_start (row_start + 12 * letter_h) renderer
-
 
 let draw_state : c8_state -> Sdl.renderer -> unit = fun state renderer ->
   draw_registers state renderer;
@@ -152,8 +141,8 @@ let draw_state : c8_state -> Sdl.renderer -> unit = fun state renderer ->
   draw_opcode state renderer;
   draw_IR state renderer;
   draw_timers state renderer;
-  draw_stack state renderer;
-  draw_opcode_peculiar state renderer
+  draw_stack state renderer
+
 
 
   

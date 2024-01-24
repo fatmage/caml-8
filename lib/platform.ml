@@ -1,6 +1,5 @@
 open State
 open Inttypes
-open Memory
 open Instruction
 open Keyboard
 open Graphics
@@ -8,32 +7,18 @@ open Tsdl
 open State_history
 
 
-let print_space str = print_string str; print_string " "
-
-
-
-
 let fetch_decode_execute : c8_state -> c8_state =
-  fun state ->  let opcode : uint16 = fetch_opcode (get_mem state) (get_pc state) in
+  fun state ->  let opcode : uint16 = fetch_opcode state in
                 let instruction : c8_instruction = decode_opcode opcode in
                 match instruction with
                   | NoArg op -> op state
-                  | Reg   op -> print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)));
-                                op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
-                  | Addr  op -> print_space (U16.to_hexstring ((U16.logand opcode (U16.of_int 0x0FFF))));
-                                op state                    (U16.logand opcode (U16.of_int 0x0FFF))
-                  | DReg  op -> print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)));
-                                print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x00F0)) (U16.of_int 4)));
-                                op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
+                  | Reg   op -> op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
+                  | Addr  op -> op state                    (U16.logand opcode (U16.of_int 0x0FFF))
+                  | DReg  op -> op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
                                          (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x00F0)) (U16.of_int 4))) 
-                  | RegV  op -> print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)));
-                                print_space (U16.to_hexstring (U16.logand opcode (U16.of_int 0x00FF)));                    
-                                op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
+                  | RegV  op -> op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
                                          (u16_to_8          (U16.logand opcode (U16.of_int 0x00FF)))
-                  | DRegV op -> print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)));
-                                print_space (U16.to_hexstring (U16.shr (U16.logand opcode (U16.of_int 0x00F0)) (U16.of_int 4)));
-                                print_space (U16.to_hexstring (U16.logand opcode (U16.of_int 0x000F)));
-                                op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
+                  | DRegV op -> op state (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x0F00)) (U16.of_int 8)))
                                          (u16_to_8 (U16.shr (U16.logand opcode (U16.of_int 0x00F0)) (U16.of_int 4))) 
                                          (u16_to_8          (U16.logand opcode (U16.of_int 0x000F))) 
 
@@ -46,7 +31,7 @@ let tick_cpu : c8_state -> int -> c8_state = fun state timer_tick ->
 
 
 let timer_time = 1. /. 60.
-let timer_frame_ratio = 3
+let timer_frame_ratio = 20
 let frame_time = timer_time /. (float_of_int timer_frame_ratio)
 
 
@@ -81,6 +66,7 @@ and debugger_loop : state_history -> c8_state -> int -> Sdl.renderer -> c8_state
     else if keyboard_events.right_pressed then if history_up_to_date history then
                                               let new_state = tick_cpu state timer_tick in
                                               let new_history = add_to_history history new_state in 
+                                              clear_graphics renderer;
                                               debugger_loop new_history new_state (if timer_tick == 1 then timer_frame_ratio else timer_tick - 1) renderer
                                               else
                                               let new_history = move_right history in 
