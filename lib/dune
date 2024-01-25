@@ -1,4 +1,4 @@
 (library
  (name caml_8_lib)
- (libraries tsdl)
+ (libraries tsdl tsdl-mixer)
  (flags (:standard -w -27)))
