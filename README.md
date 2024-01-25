@@ -1,12 +1,16 @@
 # caml-8
 
-CHIP-8 interpreter and rom debugger written in Ocaml using SDL for graphics and keyboard handling.
+CHIP-8 interpreter and rom debugger written in Ocaml for Functional Programming course at University of Wrocław.
 
 ## Installation and running
 
+Dependencies: `tsdl` and `tsdl-mixer`
+
 To run the program with `dune` run ``dune exec caml-8 -- ROM_PATH``
 
-CHIP-8 delay and sound timers run at 60 Hz, default execution speed of caml-8 is set at 3 times that, which is 180 Hz.
+CHIP-8 delay and sound timers run at 60 Hz, default execution speed of caml-8 is set at 5 times that, which is 300 Hz.
+
+To pause/resume execution of the ROM press space, to move backwards/forwards use left and right arrows.
 
 ## Sources
 
@@ -23,7 +27,4 @@ CHIP-8 specification based on:
 
 ## TODO
 
-- fix it
-- add debugger
-- add sound
-- make it possible to set custom speed multiplier
+- custom timer/frame ratio passed in argv

@@ -17,6 +17,7 @@ let () =
   let m = load_music music_path in
   let t = Sys.time () in
   let s = load_rom rom_channel in
+  beeper s m;
   let hs = add_to_history empty_history s in
   let _ = interpreter_loop hs s t 0.0 timer_frame_ratio renderer m in
   close_graphics window renderer;
