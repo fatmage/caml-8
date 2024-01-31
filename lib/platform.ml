@@ -11,7 +11,7 @@ open State_history
 
 
 let timer_time = 1. /. 60.
-let timer_frame_ratio = 5
+let timer_frame_ratio = 3
 let frame_time = timer_time /. (float_of_int timer_frame_ratio)
 
 
